@@ -1,0 +1,130 @@
+{
+  "info": {
+    "_postman_id": "7b2d5d83-4a69-4e76-857e-3c22ad6e8e21",
+    "name": "Camunda 8 Workflow Lab (SRMIST EX-5)",
+    "description": "Postman Collection for Hostel Out-Pass and Student Leave workflows running on Camunda 8 SaaS + Spring Boot.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Hostel Out-Pass - Day Out (Auto-Approved)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"studentName\": \"Sudhanshu Kumar\",\n  \"regNo\": \"RA2311003010001\",\n  \"hostelBlock\": \"M-Block, Room 412\",\n  \"outDate\": \"2026-10-25\",\n  \"returnDate\": \"2026-10-25\",\n  \"parentPhone\": \"+919876543210\",\n  \"purpose\": \"Local market visit & stationery purchase\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/outpass",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["outpass"]
+        },
+        "description": "Submits a same-day outpass request (nights = 0) which is auto-approved by the gateway without warden intervention."
+      }
+    },
+    {
+      "name": "2. Hostel Out-Pass - Overnight (Needs Warden Approval)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"studentName\": \"Aakash Sharma\",\n  \"regNo\": \"RA2311003010045\",\n  \"hostelBlock\": \"O-Block, Room 204\",\n  \"outDate\": \"2026-10-25\",\n  \"returnDate\": \"2026-10-28\",\n  \"parentPhone\": \"+919812345678\",\n  \"purpose\": \"Attending hackathon at IIT Madras\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/outpass",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["outpass"]
+        },
+        "description": "Submits a multi-day outpass request (nights = 3). Token stops at 'Warden approval' user task in Camunda Tasklist."
+      }
+    },
+    {
+      "name": "3. Hostel Out-Pass - Invalid Dates (Rejected)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"studentName\": \"Rohan Verma\",\n  \"regNo\": \"RA2311003010099\",\n  \"hostelBlock\": \"N-Block, Room 102\",\n  \"outDate\": \"2026-10-28\",\n  \"returnDate\": \"2026-10-25\",\n  \"parentPhone\": \"+919899887766\",\n  \"purpose\": \"Home visit\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/outpass",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["outpass"]
+        },
+        "description": "Return date is before out date. Gateway routes request directly to rejection."
+      }
+    },
+    {
+      "name": "4. Student Leave - Short Leave (Auto-Approved)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"studentName\": \"Priya\",\n  \"regNo\": \"RA2311003010001\",\n  \"fromDate\": \"2026-10-25\",\n  \"toDate\": \"2026-10-26\",\n  \"reason\": \"Medical appointment\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/leave",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["leave"]
+        },
+        "description": "2-day leave application. Auto-approved by gateway without Faculty Advisor."
+      }
+    },
+    {
+      "name": "5. Student Leave - Long Leave (Faculty Advisor Approval)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"studentName\": \"Priya\",\n  \"regNo\": \"RA2311003010001\",\n  \"fromDate\": \"2026-10-25\",\n  \"toDate\": \"2026-10-30\",\n  \"reason\": \"Family wedding ceremony\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/leave",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["leave"]
+        },
+        "description": "6-day leave application. Waits at Faculty Advisor user task in Tasklist."
+      }
+    }
+  ]
+}

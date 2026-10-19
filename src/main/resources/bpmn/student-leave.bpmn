@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  xmlns:modeler="http://camunda.org/schema/modeler/1.0"
+                  id="Definitions_StudentLeave"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Camunda Web Modeler"
+                  exporterVersion="8.8.0"
+                  modeler:executionPlatform="Camunda Cloud"
+                  modeler:executionPlatformVersion="8.8.0">
+  <bpmn:process id="student-leave" name="Student Leave Application" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_LeaveRequested" name="Leave requested">
+      <bpmn:outgoing>Flow_Start_ToValidate</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_ValidateLeave" name="Validate leave request">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="validate-leave" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Start_ToValidate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validate_ToGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_LeaveDecision" name="Evaluate Leave Days">
+      <bpmn:incoming>Flow_Validate_ToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Leave_AutoApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Leave_NeedsFA</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Leave_Invalid</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_FacultyAdvisorApproval" name="Faculty Advisor approval">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="fa-approval-form" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Leave_NeedsFA</bpmn:incoming>
+      <bpmn:outgoing>Flow_FA_ToMerge</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_LeaveMerge" name="Merge decisions">
+      <bpmn:incoming>Flow_Leave_AutoApproved</bpmn:incoming>
+      <bpmn:incoming>Flow_Leave_Invalid</bpmn:incoming>
+      <bpmn:incoming>Flow_FA_ToMerge</bpmn:incoming>
+      <bpmn:outgoing>Flow_Merge_ToNotify</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_NotifyStudent" name="Notify student">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-student" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Merge_ToNotify</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify_ToEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_LeaveProcessed" name="Leave Process Finished">
+      <bpmn:incoming>Flow_Notify_ToEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows with Condition Expressions -->
+    <bpmn:sequenceFlow id="Flow_Start_ToValidate" sourceRef="StartEvent_LeaveRequested" targetRef="Task_ValidateLeave" />
+    <bpmn:sequenceFlow id="Flow_Validate_ToGateway" sourceRef="Task_ValidateLeave" targetRef="Gateway_LeaveDecision" />
+
+    <bpmn:sequenceFlow id="Flow_Leave_AutoApproved" name="Short leave (=valid and leaveDays &lt;= 2)" sourceRef="Gateway_LeaveDecision" targetRef="Gateway_LeaveMerge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=valid and leaveDays &lt;= 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_Leave_NeedsFA" name="Long leave (=valid and leaveDays &gt; 2)" sourceRef="Gateway_LeaveDecision" targetRef="Task_FacultyAdvisorApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=valid and leaveDays &gt; 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_Leave_Invalid" name="Invalid dates (=not(valid))" sourceRef="Gateway_LeaveDecision" targetRef="Gateway_LeaveMerge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=not(valid)</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_FA_ToMerge" sourceRef="Task_FacultyAdvisorApproval" targetRef="Gateway_LeaveMerge" />
+    <bpmn:sequenceFlow id="Flow_Merge_ToNotify" sourceRef="Gateway_LeaveMerge" targetRef="Task_NotifyStudent" />
+    <bpmn:sequenceFlow id="Flow_Notify_ToEnd" sourceRef="Task_NotifyStudent" targetRef="EndEvent_LeaveProcessed" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_StudentLeave">
+    <bpmndi:BPMNPlane id="BPMNPlane_StudentLeave" bpmnElement="student-leave">
+      <bpmndi:BPMNShape id="StartEvent_LeaveRequested_di" bpmnElement="StartEvent_LeaveRequested">
+        <dc:Bounds x="160" y="190" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="139" y="233" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateLeave_di" bpmnElement="Task_ValidateLeave">
+        <dc:Bounds x="250" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_LeaveDecision_di" bpmnElement="Gateway_LeaveDecision" isMarkerVisible="true">
+        <dc:Bounds x="410" y="183" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="398" y="145" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FacultyAdvisorApproval_di" bpmnElement="Task_FacultyAdvisorApproval">
+        <dc:Bounds x="540" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_LeaveMerge_di" bpmnElement="Gateway_LeaveMerge" isMarkerVisible="true">
+        <dc:Bounds x="720" y="183" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="705" y="240" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyStudent_di" bpmnElement="Task_NotifyStudent">
+        <dc:Bounds x="830" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_LeaveProcessed_di" bpmnElement="EndEvent_LeaveProcessed">
+        <dc:Bounds x="990" y="190" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="972" y="233" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_ToValidate_di" bpmnElement="Flow_Start_ToValidate">
+        <di:waypoint x="196" y="208" />
+        <di:waypoint x="250" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Validate_ToGateway_di" bpmnElement="Flow_Validate_ToGateway">
+        <di:waypoint x="350" y="208" />
+        <di:waypoint x="410" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Leave_AutoApproved_di" bpmnElement="Flow_Leave_AutoApproved">
+        <di:waypoint x="435" y="233" />
+        <di:waypoint x="435" y="310" />
+        <di:waypoint x="745" y="310" />
+        <di:waypoint x="745" y="233" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="550" y="316" width="81" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Leave_NeedsFA_di" bpmnElement="Flow_Leave_NeedsFA">
+        <di:waypoint x="460" y="208" />
+        <di:waypoint x="540" y="208" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="461" y="176" width="79" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Leave_Invalid_di" bpmnElement="Flow_Leave_Invalid">
+        <di:waypoint x="435" y="233" />
+        <di:waypoint x="435" y="380" />
+        <di:waypoint x="745" y="380" />
+        <di:waypoint x="745" y="233" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="553" y="386" width="77" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FA_ToMerge_di" bpmnElement="Flow_FA_ToMerge">
+        <di:waypoint x="640" y="208" />
+        <di:waypoint x="720" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Merge_ToNotify_di" bpmnElement="Flow_Merge_ToNotify">
+        <di:waypoint x="770" y="208" />
+        <di:waypoint x="830" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Notify_ToEnd_di" bpmnElement="Flow_Notify_ToEnd">
+        <di:waypoint x="930" y="208" />
+        <di:waypoint x="990" y="208" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

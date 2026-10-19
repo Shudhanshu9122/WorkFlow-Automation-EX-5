@@ -1,0 +1,36 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "8.8.0"
+  },
+  "schemaVersion": 16,
+  "id": "fa-approval-form",
+  "components": [
+    {
+      "text": "## Student Leave Request Review\n\nPlease review the leave application submitted by the student:\n\n* **Student Name:** {{studentName}}\n* **Registration Number:** {{regNo}}\n* **From Date:** {{fromDate}}\n* **To Date:** {{toDate}}\n* **Total Leave Days:** {{leaveDays}}\n* **Reason for Leave:** {{reason}}",
+      "type": "text",
+      "id": "Field_LeaveDetails"
+    },
+    {
+      "label": "Approve this leave",
+      "type": "checkbox",
+      "id": "Field_ApproveLeave",
+      "key": "approved",
+      "defaultValue": false,
+      "description": "Tick to approve the student leave request. Leave unchecked to reject."
+    },
+    {
+      "label": "Faculty Advisor Remarks",
+      "type": "textarea",
+      "id": "Field_FARemarks",
+      "key": "remarks",
+      "description": "Provide remarks, conditions, or reason for decision.",
+      "validate": {
+        "required": true
+      }
+    }
+  ],
+  "type": "default"
+}
